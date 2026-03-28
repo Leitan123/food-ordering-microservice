@@ -1,0 +1,29 @@
+node_modules/
+*.log
+.env
+.DS_Store
+dist/
+build/
+target/
+.idea/
+.vscode/
+*.class
+*.jar
+
+# Maven
+target/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+
+# Node (if any later)
+node_modules/
