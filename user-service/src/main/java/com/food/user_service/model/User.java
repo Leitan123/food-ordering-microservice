@@ -2,6 +2,8 @@ package com.food.user_service.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "users")
@@ -9,6 +11,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class User {
 
     @Id
@@ -31,4 +35,8 @@ public class User {
     private String fullName;
     private String phoneNumber;
     private String address;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
 }

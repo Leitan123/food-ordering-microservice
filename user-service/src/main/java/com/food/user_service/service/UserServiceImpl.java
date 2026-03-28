@@ -6,6 +6,7 @@ import com.food.user_service.model.User;
 import com.food.user_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponseDTO createUser(UserRequestDTO request) {
@@ -27,7 +29,7 @@ public class UserServiceImpl implements UserService {
 
         User user = User.builder()
                 .username(request.getUsername())
-                .password(request.getPassword()) // Note: In production, password should be encoded
+                .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .role(request.getRole())
                 .fullName(request.getFullName())
