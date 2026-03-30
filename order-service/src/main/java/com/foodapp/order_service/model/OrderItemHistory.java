@@ -5,37 +5,31 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "order_item_history")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Order {
+public class OrderItemHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long orderId;
+    private Long menuId;
     private Long userId;
+    private String itemName;
+    private Integer quantity;
+    private Double price;
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
-
-    private Double totalPrice;
-    private String paymentMethod;
+    private String status;         // CANCELLED or DELIVERED
+    private String reason;         // optional: why cancelled
 
     @CreationTimestamp
     private LocalDateTime createdAt;  // automatically set when record created
 
-    @Builder.Default
-    @OneToMany(
-            mappedBy = "order",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<OrderItem> items = new ArrayList<>();
+    private LocalDateTime deletedAt;   // set when item is cancelled/deleted
 }

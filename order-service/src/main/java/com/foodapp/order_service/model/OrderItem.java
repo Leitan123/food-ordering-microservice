@@ -3,6 +3,8 @@ package com.foodapp.order_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "order_items")
 @Data
@@ -16,8 +18,11 @@ public class OrderItem {
     private Long id;
 
     private Long menuId;
-
+    private String itemName;
     private Integer quantity;
-
     private Double price;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
 }
