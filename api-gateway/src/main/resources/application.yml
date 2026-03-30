@@ -22,3 +22,16 @@ spring:
           uri: http://localhost:8001
           predicates:
             - Path=/api/users/**, /health, /
+        - id: user-service-docs
+          uri: http://localhost:8001
+          predicates:
+            - Path=/user-service/v3/api-docs
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: user-service
+        url: /user-service/v3/api-docs
+        displayName: User Service API
