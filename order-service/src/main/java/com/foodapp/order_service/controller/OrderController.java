@@ -3,6 +3,8 @@ package com.foodapp.order_service.controller;
 import com.foodapp.order_service.dto.*;
 import com.foodapp.order_service.service.OrderHistoryService;
 import com.foodapp.order_service.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@Tag(name = "Order Controller", description = "Endpoints for managing customer orders and history")
 public class OrderController {
 
     // Injecting the OrderService to handle business logic

@@ -38,6 +38,16 @@ spring:
             - Path=/menu-service/v3/api-docs
           filters:
             - RewritePath=/menu-service/(?<segment>.*), /$\{segment}
+        - id: order-service
+          uri: http://localhost:8003
+          predicates:
+            - Path=/api/orders/**
+        - id: order-service-docs
+          uri: http://localhost:8003
+          predicates:
+            - Path=/order-service/v3/api-docs
+          filters:
+            - RewritePath=/order-service/(?<segment>.*), /$\{segment}
 
 springdoc:
   swagger-ui:
@@ -48,5 +58,8 @@ springdoc:
       - name: menu-service
         url: /menu-service/v3/api-docs
         displayName: Menu Service API
+      - name: order-service
+        url: /order-service/v3/api-docs
+        displayName: Order Service API
     primary-name: user-service
     display-query-config: true
