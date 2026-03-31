@@ -1,6 +1,10 @@
 package com.foodapp.order_service.service.impl;
 
+import com.foodapp.order_service.client.MenuClient;
+import com.foodapp.order_service.client.UserClient;
 import com.foodapp.order_service.dto.CreateOrderRequest;
+import com.foodapp.order_service.dto.MenuItemDTO;
+import com.foodapp.order_service.dto.UserDTO;
 import com.foodapp.order_service.dto.OrderItemDTO;
 import com.foodapp.order_service.dto.OrderResponseDTO;
 import com.foodapp.order_service.model.Order;
@@ -12,6 +16,7 @@ import com.foodapp.order_service.repository.OrderRepository;
 import com.foodapp.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import feign.FeignException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +27,8 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemHistoryRepository orderItemHistoryRepository;
+    private final UserClient userClient;
+    private final MenuClient menuClient;
 
 
     /**
@@ -31,6 +38,15 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public OrderResponseDTO createOrder(CreateOrderRequest request) {
+        // 1. Verify User exists securely via User Service
+        try {
+            UserDTO user = userClient.getUserById(request.getUserId());
+        } catch (FeignException.NotFound e) {
+            throw new RuntimeException("User not found with id: " + request.getUserId());
+        } catch (Exception e) {
+            throw new RuntimeException("Error communicating with User Service");
+        }
+
         // Build order without items yet
         Order order = Order.builder()
                 .userId(request.getUserId())
@@ -38,20 +54,38 @@ public class OrderServiceImpl implements OrderService {
                 .paymentMethod(request.getPaymentMethod())
                 .build();
 
-        // Convert DTO items to entity items and link them to the order
+        // 2. Convert DTO items to entity items, fetching realtime data from Menu Service
         List<OrderItem> items = request.getItems().stream()
-                .map(dto -> OrderItem.builder()
-                        .menuId(dto.getMenuId())
-                        .itemName(dto.getItemName())
-                        .quantity(dto.getQuantity())
-                        .price(dto.getPrice())
-                        .order(order) // link to parent
-                        .build())
+                .map(dto -> {
+                    try {
+                        MenuItemDTO menuItem = menuClient.getMenuItemById(dto.getMenuId());
+                        
+                        if (!menuItem.getAvailable()) {
+                            throw new RuntimeException("Menu item is currently unavailable: " + menuItem.getName());
+                        }
+
+                        return OrderItem.builder()
+                                .menuId(menuItem.getId())
+                                .itemName(menuItem.getName()) // Secure: From Menu Service
+                                .quantity(dto.getQuantity())
+                                .price(menuItem.getPrice())   // Secure: From Menu Service
+                                .order(order) // link to parent
+                                .build();
+                    } catch (FeignException.NotFound e) {
+                        throw new RuntimeException("Menu item not found with id: " + dto.getMenuId());
+                    } catch (Exception e) {
+                        // Re-throw the unavailability exception if that was the cause
+                        if (e.getMessage() != null && e.getMessage().contains("Menu item is currently unavailable")) {
+                            throw e;
+                        }
+                        throw new RuntimeException("Error communicating with Menu Service for item id: " + dto.getMenuId());
+                    }
+                })
                 .collect(Collectors.toList());
 
         order.setItems(items); // set items in order
 
-        // Calculate total price
+        // Calculate total price securely
         double totalPrice = items.stream()
                 .mapToDouble(i -> i.getPrice() * i.getQuantity())
                 .sum();
