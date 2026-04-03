@@ -3,6 +3,8 @@ package com.food.payment_service.controller;
 import com.food.payment_service.dto.PaymentRequestDTO;
 import com.food.payment_service.dto.PaymentResponseDTO;
 import com.food.payment_service.service.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,10 +16,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
+@Tag(name = "Payment Controller", description = "Endpoints for initiating and managing payments. Secured by Order Service verification.")
 public class PaymentController {
 
     private final PaymentService paymentService;
 
+    @Operation(summary = "Initiate a new payment", description = "Checks order details in Order Service to ensure correct amount and user.")
     @PostMapping("/initiate")
     public ResponseEntity<PaymentResponseDTO> initiatePayment(@Valid @RequestBody PaymentRequestDTO request) {
         return new ResponseEntity<>(paymentService.initiatePayment(request), HttpStatus.CREATED);

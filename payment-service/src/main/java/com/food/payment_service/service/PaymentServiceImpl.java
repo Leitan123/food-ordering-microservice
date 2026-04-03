@@ -31,10 +31,22 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final StripePaymentGateway stripeGateway;
     private final StripeConfig stripeConfig;
+    private final com.food.payment_service.client.OrderClient orderClient;
 
     @Override
     @Transactional
     public PaymentResponseDTO initiatePayment(PaymentRequestDTO request) {
+        // Validation: Verify order exists and matches user/amount
+        com.food.payment_service.dto.OrderDTO order = orderClient.getOrderById(request.getOrderId());
+        
+        if (!order.getUserId().equals(request.getUserId())) {
+            throw new PaymentProcessingException("Order does not belong to the specified user");
+        }
+        
+        if (order.getTotalPrice().compareTo(request.getAmount()) != 0) {
+            throw new PaymentProcessingException("Payment amount does not match order total: " + order.getTotalPrice());
+        }
+
         // Idempotency: if payment already exists for this order, return it
         Optional<Payment> existing = paymentRepository.findByOrderId(request.getOrderId());
         if (existing.isPresent()) {
